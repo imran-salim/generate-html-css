@@ -1,13 +1,14 @@
-var express = require('express');
-var router = express.Router();
-var ai = require('openai');
+import express from 'express';
+import OpenAI from 'openai';
+const router = express.Router();
+// var ai = require('openai');
 
 /*
   GET home page. 
   Render a random web page in HTML and CSS.
 */
 router.get('/', async function(req, res, next) {
-  const client = new ai.OpenAI({
+  const client = new OpenAI({
     apiKey: process.env['OPENAI_API_KEY'],
   });
 
@@ -25,4 +26,4 @@ router.get('/', async function(req, res, next) {
   res.render('index', { response: cleanResponse });
 });
 
-module.exports = router;
+export default router;

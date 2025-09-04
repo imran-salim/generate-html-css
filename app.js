@@ -1,12 +1,20 @@
-require('dotenv').config();
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var rateLimiter = require('express-rate-limit');
+import dotenv from 'dotenv';
+import createError from 'http-errors';
+import express from 'express';
+import path from 'path';
+import cookieParser from 'cookie-parser';
+import logger from 'morgan';
+import rateLimit from 'express-rate-limit';
+import indexRouter from './routes/index.js';
 
-const limiter = rateLimiter.rateLimit({
+dotenv.config();
+
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 3,
   standardHeaders: 'draft-8',
@@ -14,9 +22,9 @@ const limiter = rateLimiter.rateLimit({
   ipv6Subnet: 48,
 });
 
-var indexRouter = require('./routes/index');
+// var indexRouter = require('./routes/index');
 
-var app = express();
+const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -47,4 +55,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+export default app;
