@@ -27,7 +27,7 @@ const limiter = rateLimit({
 const app = express();
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(process.cwd(), 'views'));
 app.set('view engine', 'pug');
 
 app.use(logger('dev'));
@@ -45,7 +45,11 @@ app.use(function(req, res, next) {
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function(
+  err: { message: any; status: any; }, 
+  req: { app: { get: (arg0: string) => string; }; }, 
+  res: { locals: { message: any; error: any; }; status: (arg0: any) => void; render: (arg0: string) => void; }, 
+  next: any) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
