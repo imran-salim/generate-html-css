@@ -1,7 +1,6 @@
 import express from 'express';
 import OpenAI from 'openai';
 const router = express.Router();
-// var ai = require('openai');
 
 /*
   GET home page. 
