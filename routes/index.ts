@@ -4,25 +4,34 @@ const router = express.Router();
 
 /*
   GET home page. 
-  Render a random web page in HTML and CSS.
+  Render a random web page in HTML and CSS
 */
 router.get('/', async function(req, res, next) {
-  const client = new OpenAI({
-    apiKey: process.env['OPENAI_API_KEY'],
-  });
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).send('Missing OPENAI_API_KEY');
+    }
 
-  const response = await client.responses.create({
-    model: 'gpt-3.5-turbo',
-    instructions: 'You are a web developer that develops aesthetic HTML and CSS pages',
-    input: 'Respond with only HTML and CSS code',
-  });
+    const client: OpenAI = new OpenAI({
+      apiKey: process.env['OPENAI_API_KEY'],
+    });
 
+    const response: OpenAI.Responses.Response = await client.responses.create({
+      model: 'gpt-3.5-turbo',
+      instructions: 'You are a web developer that develops HTML and CSS pages',
+      input: 'Respond with only HTML and CSS code',
+    });
 
-  let cleanResponse = response.output_text
-    .replace(/```html\s*/gi, '')
-    .replace(/```\s*/gi, '');
+    // Remove fenced ```html / ```css blocks and closing fences
+    const cleanResponse: string = response.output_text
+      .replace(/```(?:html|css)?\s*/gi, '')
+      .replace(/```/g, '')
+      .trim();
 
-  res.render('index', { response: cleanResponse });
+    res.render('index', { response: cleanResponse });
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;
