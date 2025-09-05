@@ -144,7 +144,7 @@ Switch to streaming by using `client.responses.stream(...)` and progressively fl
 - Add `dev` watch script
 - Supertest integration tests
 
-## � License
+## 📝 License
 
 MIT – see `LICENSE`.
 
