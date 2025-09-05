@@ -22,8 +22,6 @@ const limiter = rateLimit({
   ipv6Subnet: 48,
 });
 
-// var indexRouter = require('./routes/index');
-
 const app = express();
 
 // view engine setup
