@@ -1,82 +1,135 @@
-# Generate HTML & CSS
+<div align="center">
 
-This is a Node.js web application for generating HTML and CSS code snippets. It provides a simple interface for users to create, preview, and download HTML/CSS code for their projects.
+# Generate HTML & CSS (AI-driven)
 
-## Features
+Generate a fresh, self‑contained HTML + CSS snippet on every page load using the OpenAI API. The server calls the OpenAI Responses API, strips markdown fences, and streams the result directly into a Pug template so you instantly see a rendered webpage.
 
-- Generate custom HTML and CSS code
-- Live preview of generated code
-- Download code snippets
-- User-friendly interface
+</div>
 
-## Project Structure
+## ✨ Features
 
-- `app.js` – Main application file
-- `bin/www` – Application startup script
-- `public/` – Static assets
-	- `images/` – Image files
-	- `javascripts/` – Client-side JavaScript
-	- `stylesheets/style.css` – Main stylesheet
-- `routes/index.js` – Application routes
-- `views/` – Pug templates
-	- `layout.pug` – Base layout
-	- `index.pug` – Home page
-	- `error.pug` – Error page
+- AI‑generated HTML + CSS on each visit to `/`
+- Cleans model output (removes ``` fences and language tags)
+- Basic rate limiting (50 requests / 15 min per IP)
+- Pug view layer with simple injection point
+- TypeScript codebase (compiled to ES modules)
+- Docker support for containerized runs
 
-## Getting Started
-### OpenAI API Key
+> Note: There is currently no persistent state, prompt customization UI, or download button. Each refresh triggers a brand‑new generation.
 
-This application requires an OpenAI API key to generate HTML and CSS code using AI features.
+## 🧱 Stack
 
-#### How to set up:
+- Node.js + Express
+- TypeScript (strict mode)
+- Pug templates
+- OpenAI SDK (`responses.create` with `gpt-3.5-turbo`)
+- express-rate-limit, morgan, cookie-parser
+- Docker (Node 18 Alpine)
 
-1. Obtain your API key from https://platform.openai.com/account/api-keys
-2. Create a `.env` file in the project root (if not already present).
-3. Add the following line to your `.env` file:
-	```env
-	OPENAI_API_KEY=your_api_key_here
-	```
-4. Restart the application after setting the key.
+## 🗺 Architecture Overview
 
-Without a valid API key, AI-powered code generation features will not work.
-### Prerequisites
+Request Flow:
+1. Browser hits `/`.
+2. Route handler (`routes/index.ts`) creates an OpenAI client using `OPENAI_API_KEY`.
+3. Calls `client.responses.create` with fixed instructions asking only for HTML + CSS.
+4. Strips any markdown code fences from `response.output_text`.
+5. Renders `views/index.pug`, injecting the raw markup inside the template.
 
-- Node.js (v14 or higher recommended)
-- npm
+Key Components:
+- `app.ts`: Express app setup (Pug engine, middleware, rate limiter, static assets, error handling).
+- `bin/www.ts`: Server bootstrap (port normalization + HTTP server events).
+- `routes/index.ts`: Core generation logic via OpenAI.
+- `views/*.pug`: Layout + index + error pages.
+- `public/stylesheets/style.css`: Minimal global styles.
 
-### Installation
+Security / Safety Considerations:
+- AI output is injected with `!{response}` (unescaped). Malicious or unexpected HTML / inline scripts could execute. Consider sanitizing or restricting model output if exposed publicly.
+- Rate limiting is present but conservative; adjust `limit` / `windowMs` as needed.
 
-1. Clone the repository:
-	 ```sh
-	 git clone https://github.com/imran-salim/generate-html-css.git
-	 cd generate-html-css
-	 ```
-2. Install dependencies:
-	 ```sh
-	 npm install
-	 ```
+## 📂 Project Structure
 
-### Running the App
+```
+app.ts                # Express app definition
+bin/www.ts            # Startup script (compiled to dist/bin/www.js)
+routes/index.ts       # Single route performing OpenAI call
+views/                # Pug templates (layout, index, error)
+public/stylesheets/   # Static CSS
+Dockerfile            # Container build
+tsconfig.json         # TypeScript configuration
+package.json          # Scripts + dependencies
+.env                  # (Not committed) holds OPENAI_API_KEY, PORT
+```
 
-Start the development server:
+## 🔑 Environment Variables
 
-```sh
+Create a `.env` file in the project root:
+
+```
+OPENAI_API_KEY=your_openai_key_here
+# Optional (defaults to 3000)
+PORT=3000
+```
+
+The app will fail at runtime if `OPENAI_API_KEY` is missing (OpenAI call throws).
+
+## 🚀 Getting Started (Local)
+
+Prereqs: Node.js 18+ (ESM + modern TS target) and npm.
+
+```
+git clone https://github.com/imran-salim/generate-html-css.git
+cd generate-html-css
+npm install
+cp .env.example .env  # (if you create one) otherwise create manually
+echo "OPENAI_API_KEY=sk-..." >> .env
 npm start
 ```
 
-The app will be available at `http://localhost:3000`.
+Visit: http://localhost:3000
 
-## Usage
+Each refresh = new AI-generated page.
 
-1. Open the app in your browser.
-2. Use the interface to generate HTML and CSS code.
-3. Preview the code live.
-4. Download the generated code as needed.
+## 🐳 Run with Docker
 
-## License
+Build & run:
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+```
+docker build -t generate-html-css .
+docker run --rm -p 3000:3000 -e OPENAI_API_KEY=sk-... generate-html-css
+```
 
-## Author
+Then open http://localhost:3000
+
+## 📦 NPM Scripts
+
+| Script  | Description |
+|---------|-------------|
+| build   | Compile TypeScript to `dist/` |
+| start   | Build then start server using compiled output |
+
+## 🔄 Development Tips
+
+- For faster iteration you can add a `dev` script with `ts-node-dev` or `nodemon` (not included yet).
+- Adjust model or instructions in `routes/index.ts` to influence style / complexity.
+- Add output sanitization if exposing publicly.
+- Switch to newer OpenAI model (e.g. `gpt-4o-mini`) by updating the `model` field.
+
+## ⚠️ Limitations / Future Ideas
+
+- No user prompt customization (could add a form + POST route).
+- No caching; every request bills the API.
+- No HTML sanitization (consider `sanitize-html`).
+- Missing tests (could add Jest + supertest for route).
+- Could stream tokens instead of waiting for full response.
+
+## 📝 License
+
+MIT – see `LICENSE`.
+
+## 👤 Author
 
 Imran Salim
+
+---
+
+Feel free to open issues or PRs for enhancements.
