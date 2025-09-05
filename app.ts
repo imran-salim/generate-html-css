@@ -4,17 +4,17 @@ import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
 import indexRouter from './routes/index.js';
 
 dotenv.config();
 
 import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename: string = fileURLToPath(import.meta.url);
+const __dirname: string = path.dirname(__filename);
 
 
-const limiter = rateLimit({
+const limiter: RateLimitRequestHandler = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 50,
   standardHeaders: 'draft-8',

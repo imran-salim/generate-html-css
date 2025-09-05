@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/bin/www.js"
+    "start": "npm run build && node dist/bin/www.js",
+    "test": "jest"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -22,8 +23,12 @@
     "@types/cookie-parser": "^1.4.9",
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.3.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   }
 }
