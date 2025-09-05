@@ -1,128 +1,150 @@
 <div align="center">
 
-# Generate HTML & CSS (AI-driven)
+# Generate HTML & CSS (AI‑Driven)
 
-Generate a fresh, self‑contained HTML + CSS snippet on every page load using the OpenAI API. The server calls the OpenAI Responses API, strips markdown fences, and streams the result directly into a Pug template so you instantly see a rendered webpage.
+Spin up a tiny Express + TypeScript app that calls the OpenAI Responses API on every page load and renders a brand‑new, self‑contained HTML + CSS snippet. Hard refresh = an entirely different mini webpage.
 
 </div>
 
-## ✨ Features
+## ✨ What You Get
 
-- AI‑generated HTML + CSS on each visit to `/`
-- Cleans model output (removes ``` fences and language tags)
-- Basic rate limiting (50 requests / 15 min per IP)
-- Pug view layer with simple injection point
-- TypeScript codebase (compiled to ES modules)
-- Docker support for containerized runs
+- Fresh AI‑generated HTML + CSS on each visit to `/`
+- Automatic cleanup of markdown code fences (```html / ```css)
+- Basic rate limiting (50 req / 15 min / IP)
+- Pug templating with direct (unescaped) injection zone
+- TypeScript + ES Module build
+- Docker image support
+- Jest test scaffold (mocked OpenAI) verifying fenced output format
 
-> Note: There is currently no persistent state, prompt customization UI, or download button. Each refresh triggers a brand‑new generation.
+> This is a minimal demo. No persistence, forms, or customization UI—yet.
 
-## 🧱 Stack
+## 🧱 Tech Stack
 
-- Node.js + Express
-- TypeScript (strict mode)
-- Pug templates
-- OpenAI SDK (`responses.create` with `gpt-3.5-turbo`)
-- express-rate-limit, morgan, cookie-parser
-- Docker (Node 18 Alpine)
+| Layer | Choice |
+|-------|--------|
+| Runtime | Node.js 18+ |
+| Framework | Express 4 |
+| Templates | Pug |
+| AI SDK | openai (Responses API) |
+| Lang | TypeScript (strict) |
+| Misc | express-rate-limit, morgan, cookie-parser |
+| Tests | Jest + ts-jest |
+| Container | Node 18 Alpine |
 
-## 🗺 Architecture Overview
+## 🗺 How It Works
 
-Request Flow:
-1. Browser hits `/`.
-2. Route handler (`routes/index.ts`) creates an OpenAI client using `OPENAI_API_KEY`.
-3. Calls `client.responses.create` with fixed instructions asking only for HTML + CSS.
-4. Strips any markdown code fences from `response.output_text`.
-5. Renders `views/index.pug`, injecting the raw markup inside the template.
+1. Client requests `/`.
+2. `routes/index.ts` builds an OpenAI client with `OPENAI_API_KEY`.
+3. Calls `responses.create` with fixed instructions to return only HTML + CSS.
+4. Regex strips all fenced code blocks & language tags.
+5. Clean markup is injected into `views/index.pug` via `!{response}`.
 
-Key Components:
-- `app.ts`: Express app setup (Pug engine, middleware, rate limiter, static assets, error handling).
-- `bin/www.ts`: Server bootstrap (port normalization + HTTP server events).
-- `routes/index.ts`: Core generation logic via OpenAI.
-- `views/*.pug`: Layout + index + error pages.
-- `public/stylesheets/style.css`: Minimal global styles.
+Key files:
+- `app.ts` – Express setup (views, static, middleware, limiter, error handling)
+- `routes/index.ts` – OpenAI call + response cleaning
+- `bin/www.ts` – HTTP server bootstrap + port normalization
+- `views/` – Pug templates (`layout`, `index`, `error`)
+- `public/stylesheets/style.css` – Global styles
+- `tests/routes/index.jest.ts` – Example mocked response tests
 
-Security / Safety Considerations:
-- AI output is injected with `!{response}` (unescaped). Malicious or unexpected HTML / inline scripts could execute. Consider sanitizing or restricting model output if exposed publicly.
-- Rate limiting is present but conservative; adjust `limit` / `windowMs` as needed.
+## 🔐 Security Notes
 
-## 📂 Project Structure
+- AI output is unescaped (`!{response}`) → arbitrary HTML (and inline scripts) will execute if the model returns them. For public deployment add an allow‑list or sanitize with a library like `sanitize-html`.
+- Rate limiting is basic; tune `limit` and `windowMs` for production.
+- Never commit your real `OPENAI_API_KEY`.
 
-```
-app.ts                # Express app definition
-bin/www.ts            # Startup script (compiled to dist/bin/www.js)
-routes/index.ts       # Single route performing OpenAI call
-views/                # Pug templates (layout, index, error)
-public/stylesheets/   # Static CSS
-Dockerfile            # Container build
-tsconfig.json         # TypeScript configuration
-package.json          # Scripts + dependencies
-.env                  # (Not committed) holds OPENAI_API_KEY, PORT
-```
-
-## 🔑 Environment Variables
-
-Create a `.env` file in the project root:
+## 📂 Structure
 
 ```
-OPENAI_API_KEY=your_openai_key_here
-# Optional (defaults to 3000)
+app.ts
+bin/www.ts
+routes/index.ts
+views/
+public/stylesheets/
+tests/
+Dockerfile
+tsconfig.json
+package.json
+```
+
+## 🔑 Environment
+
+Create `.env` in the project root:
+
+```
+OPENAI_API_KEY=sk-...
+# Optional
 PORT=3000
 ```
 
-The app will fail at runtime if `OPENAI_API_KEY` is missing (OpenAI call throws).
+The server will respond 500 if the key is missing.
 
-## 🚀 Getting Started (Local)
+## 🚀 Quick Start
 
-Prereqs: Node.js 18+ (ESM + modern TS target) and npm.
-
-```
+```bash
 git clone https://github.com/imran-salim/generate-html-css.git
 cd generate-html-css
 npm install
-cp .env.example .env  # (if you create one) otherwise create manually
-echo "OPENAI_API_KEY=sk-..." >> .env
+echo "OPENAI_API_KEY=sk-..." > .env
 npm start
 ```
 
-Visit: http://localhost:3000
+Open http://localhost:3000 and refresh to generate new pages.
 
-Each refresh = new AI-generated page.
+## 🐳 Docker
 
-## 🐳 Run with Docker
-
-Build & run:
-
-```
+```bash
 docker build -t generate-html-css .
 docker run --rm -p 3000:3000 -e OPENAI_API_KEY=sk-... generate-html-css
 ```
 
-Then open http://localhost:3000
+Browse to http://localhost:3000
 
-## 📦 NPM Scripts
+## 📦 Scripts
 
-| Script  | Description |
-|---------|-------------|
-| build   | Compile TypeScript to `dist/` |
-| start   | Build then start server using compiled output |
+| Script | What it does |
+|--------|--------------|
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm start` | Build then launch server (`dist/bin/www.js`) |
+| `npm test` | Run Jest tests (OpenAI mocked) |
 
-## 🔄 Development Tips
+Suggested (not included—add if you like):
 
-- For faster iteration you can add a `dev` script with `ts-node-dev` or `nodemon` (not included yet).
-- Adjust model or instructions in `routes/index.ts` to influence style / complexity.
-- Add output sanitization if exposing publicly.
-- Switch to newer OpenAI model (e.g. `gpt-4o-mini`) by updating the `model` field.
+```jsonc
+"dev": "ts-node --esm bin/www.ts" // or nodemon/ts-node-dev
+```
 
-## ⚠️ Limitations / Future Ideas
+## 🧪 Testing
 
-- No user prompt customization (could add a form + POST route).
-- No caching; every request bills the API.
-- No HTML sanitization (consider `sanitize-html`).
-- Missing tests (could add Jest + supertest for route).
-- Could stream tokens instead of waiting for full response.
+The existing test mocks OpenAI and asserts that fenced HTML and CSS blocks appear and close properly. Extend with supertest to hit the real route once you add HTTP tests.
 
-## 📝 License
+Run:
+
+```bash
+npm test
+```
+
+## ⚙️ Configuration Tweaks
+
+Edit `routes/index.ts` to adjust:
+- `model` (e.g. upgrade to `gpt-4o-mini`)
+- `instructions` (tone / constraints)
+- Rate limits in `app.ts`
+
+Switch to streaming by using `client.responses.stream(...)` and progressively flushing to the response (not implemented here).
+
+## 🚧 Roadmap / Ideas
+
+- Prompt customization form + POST route
+- Output download / copy button
+- Sanitization / content policy enforcement
+- Token streaming to client
+- Caching / ETag for repeated prompts
+- Model selection dropdown
+- Add `dev` watch script
+- Supertest integration tests
+
+## � License
 
 MIT – see `LICENSE`.
 
@@ -132,4 +154,4 @@ Imran Salim
 
 ---
 
-Feel free to open issues or PRs for enhancements.
+PRs & issues welcome.
